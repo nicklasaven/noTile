@@ -95,7 +95,7 @@ int init_resources()
     int nStyles = sqlite3_column_int(preparedCountStyle, 0);
     int maxStyleID = sqlite3_column_int(preparedCountStyle, 1);
     sqlite3_finalize(preparedCountStyle);
-    
+
     length_global_styles = maxStyleID + 1;
 
     size_t thesize = length_global_styles * sizeof(STYLES_RUNTIME) + 1;
@@ -132,7 +132,7 @@ int init_resources()
         global_styles[styleID].outlinecolor[2] = (GLfloat) (sqlite3_column_int(preparedStylesLoading, 7)/255.0);
         global_styles[styleID].lineWidth =  sqlite3_column_int(preparedStylesLoading, 8);
     }
-    
+
     sqlite3_finalize(preparedStylesLoading);
     /*We fetch all databases that is used by Layers to attach them to our projectDB*/
     char *sqlDb2Attach = " select distinct d.source, d.name from dbs d inner join layers l on d.name=l.source;";
@@ -149,10 +149,10 @@ int init_resources()
 
         const unsigned char *dbsource = sqlite3_column_text(preparedDb2Attach, 0);
         const unsigned char * dbname= sqlite3_column_text(preparedDb2Attach, 1);
-	
-	
-	
-	
+
+
+
+
         char sqlAttachDb[30];
         snprintf(sqlAttachDb,sizeof(sql), "%s%s%s%s%s",
                  "ATTACH '",dbsource,"' AS ", dbname,";");
@@ -163,7 +163,7 @@ int init_resources()
         /* vs_source = sqlite3_column_text(preparedLayerLoading, 3);
          fs_source = sqlite3_column_text(preparedLayerLoading, 4);*/
     }
-sqlite3_finalize(preparedDb2Attach);
+    sqlite3_finalize(preparedDb2Attach);
     /*This is for inserting runtime parameters in our layers_runtime table*/
     char *sqlCountLayers = "SELECT COUNT(*)   "
                            "FROM layers l ; ";
@@ -236,8 +236,8 @@ sqlite3_finalize(preparedDb2Attach);
 
         glDetachShader(program, vs);
         glDetachShader(program, fs);
-	glDeleteShader(vs);
-	glDeleteShader(fs);
+        glDeleteShader(vs);
+        glDeleteShader(fs);
         const unsigned char * dbname= sqlite3_column_text(preparedLayerLoading, 0);
         const unsigned char *geometryfield = sqlite3_column_text(preparedLayerLoading, 5);
 
@@ -333,7 +333,7 @@ sqlite3_finalize(preparedDb2Attach);
             oneLayer->tri_index =  init_element_buf();
 
     }
-    
+
     sqlite3_finalize(preparedLayerLoading);
     return 0;
 }
@@ -341,24 +341,24 @@ sqlite3_finalize(preparedDb2Attach);
 
 
 void free_resources(SDL_Window* window,SDL_GLContext context) {
-     int t;
+    int t;
     DEBUG_PRINT(("Entering free_resources\n"));
 
-  LAYER_RUNTIME theLayer;
-       for (t=0; t<nLayers; t++)
+    LAYER_RUNTIME theLayer;
+    for (t=0; t<nLayers; t++)
+    {
+        theLayer = layerRuntime[t];
+        glDeleteProgram(theLayer.program);
+        destroy_buffer(theLayer.res_buf);
+        if (theLayer.geometryType == POLYGONTYPE)
         {
-	  theLayer = layerRuntime[t];
-	  glDeleteProgram(theLayer.program);
-            destroy_buffer(theLayer.res_buf);
-	    if (theLayer.geometryType == POLYGONTYPE)
-	    {
-	      element_destroy_buffer(theLayer.tri_index);
-	    }
-	    
-	    sqlite3_finalize(theLayer.preparedStatement);
-	    
+            element_destroy_buffer(theLayer.tri_index);
         }
-        free(layerRuntime);
+
+        sqlite3_finalize(theLayer.preparedStatement);
+
+    }
+    free(layerRuntime);
     free(global_styles);
     sqlite3_close_v2(projectDB);
     SDL_GL_DeleteContext(context);
@@ -529,7 +529,7 @@ int main()
 
     /*load the db into memory*/
     //loadOrSaveDb(projectDB, projectfile,0);
-SDL_GLContext context = SDL_GL_CreateContext(window);
+    SDL_GLContext context = SDL_GL_CreateContext(window);
     if (context == NULL) {
         fprintf(stderr, "Error: SDL_GL_CreateContext : %s", SDL_GetError());
         return EXIT_FAILURE;

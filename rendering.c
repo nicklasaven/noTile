@@ -85,12 +85,12 @@ int renderPoint(LAYER_RUNTIME *oneLayer,GLfloat *theMatrix)
     {
         /*    np = *(rb->npoints+i);
             pi = *(rb->start_index+i);*/
-  //      color = oneLayer->styles[*(rb->styleID+i)]->color;
-          Uint32 styleID = *(rb->styleID+i);
-          if(styleID<length_global_styles && global_styles[styleID].styleID == styleID)
+        //      color = oneLayer->styles[*(rb->styleID+i)]->color;
+        Uint32 styleID = *(rb->styleID+i);
+        if(styleID<length_global_styles && global_styles[styleID].styleID == styleID)
         {
-	color = global_styles[styleID].color;
-	}
+            color = global_styles[styleID].color;
+        }
         glUniform4fv(oneLayer->uniform_color,1,color );
         glDrawArrays(GL_POINTS, *(rb->start_index+i), *(rb->npoints+i));
     }
