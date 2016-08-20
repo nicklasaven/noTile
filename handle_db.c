@@ -60,7 +60,6 @@ int loadOrSaveDb(sqlite3 *pInMemory, const char *zFilename, int isSave)
 }
 
 
-/*This can be optimized with fewer malloc calls if upstart of the program will ba an issue*/
 LAYER_RUNTIME* init_layer_runtime(int n)
 {
     LAYER_RUNTIME *lr;

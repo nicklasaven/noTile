@@ -22,6 +22,7 @@
  **********************************************************************/
 
 
+
 #include "theclient.h"
 
 
@@ -93,7 +94,8 @@ int init_resources()
     sqlite3_step(preparedCountStyle);
     int nStyles = sqlite3_column_int(preparedCountStyle, 0);
     int maxStyleID = sqlite3_column_int(preparedCountStyle, 1);
-
+    sqlite3_finalize(preparedCountStyle);
+    
     length_global_styles = maxStyleID + 1;
 
     size_t thesize = length_global_styles * sizeof(STYLES_RUNTIME) + 1;
@@ -130,6 +132,8 @@ int init_resources()
         global_styles[styleID].outlinecolor[2] = (GLfloat) (sqlite3_column_int(preparedStylesLoading, 7)/255.0);
         global_styles[styleID].lineWidth =  sqlite3_column_int(preparedStylesLoading, 8);
     }
+    
+    sqlite3_finalize(preparedStylesLoading);
     /*We fetch all databases that is used by Layers to attach them to our projectDB*/
     char *sqlDb2Attach = " select distinct d.source, d.name from dbs d inner join layers l on d.name=l.source;";
 
@@ -145,6 +149,10 @@ int init_resources()
 
         const unsigned char *dbsource = sqlite3_column_text(preparedDb2Attach, 0);
         const unsigned char * dbname= sqlite3_column_text(preparedDb2Attach, 1);
+	
+	
+	
+	
         char sqlAttachDb[30];
         snprintf(sqlAttachDb,sizeof(sql), "%s%s%s%s%s",
                  "ATTACH '",dbsource,"' AS ", dbname,";");
@@ -155,7 +163,7 @@ int init_resources()
         /* vs_source = sqlite3_column_text(preparedLayerLoading, 3);
          fs_source = sqlite3_column_text(preparedLayerLoading, 4);*/
     }
-
+sqlite3_finalize(preparedDb2Attach);
     /*This is for inserting runtime parameters in our layers_runtime table*/
     char *sqlCountLayers = "SELECT COUNT(*)   "
                            "FROM layers l ; ";
@@ -170,6 +178,7 @@ int init_resources()
     sqlite3_step(preparedCountLayers);
     nLayers = sqlite3_column_int(preparedCountLayers, 0);
 
+    sqlite3_finalize(preparedCountLayers);
     /*Here is a query for attaching the data set databases, so we can read data from inside our runtime database*/
 
 
@@ -225,8 +234,10 @@ int init_resources()
         oneLayer->uniform_theMatrix = uniform_theMatrix;
         oneLayer->uniform_color = uniform_color;
 
-
-
+        glDetachShader(program, vs);
+        glDetachShader(program, fs);
+	glDeleteShader(vs);
+	glDeleteShader(fs);
         const unsigned char * dbname= sqlite3_column_text(preparedLayerLoading, 0);
         const unsigned char *geometryfield = sqlite3_column_text(preparedLayerLoading, 5);
 
@@ -322,21 +333,35 @@ int init_resources()
             oneLayer->tri_index =  init_element_buf();
 
     }
+    
+    sqlite3_finalize(preparedLayerLoading);
     return 0;
 }
 
 
 
-void free_resources(SDL_Window* window) {
-    //~ int t;
+void free_resources(SDL_Window* window,SDL_GLContext context) {
+     int t;
     DEBUG_PRINT(("Entering free_resources\n"));
-    /*   glDeleteProgram(program);
 
-        for (t=0; t<NTHREADS; t++)
+  LAYER_RUNTIME theLayer;
+       for (t=0; t<nLayers; t++)
         {
-            glDeleteBuffers(1, &(vbo_line[t]));
+	  theLayer = layerRuntime[t];
+	  glDeleteProgram(theLayer.program);
+            destroy_buffer(theLayer.res_buf);
+	    if (theLayer.geometryType == POLYGONTYPE)
+	    {
+	      element_destroy_buffer(theLayer.tri_index);
+	    }
+	    
+	    sqlite3_finalize(theLayer.preparedStatement);
+	    
         }
-    */
+        free(layerRuntime);
+    free(global_styles);
+    sqlite3_close_v2(projectDB);
+    SDL_GL_DeleteContext(context);
     SDL_DestroyWindow( window );
     window = NULL;
     //Quit SDL subsystems
@@ -504,8 +529,8 @@ int main()
 
     /*load the db into memory*/
     //loadOrSaveDb(projectDB, projectfile,0);
-
-    if (SDL_GL_CreateContext(window) == NULL) {
+SDL_GLContext context = SDL_GL_CreateContext(window);
+    if (context == NULL) {
         fprintf(stderr, "Error: SDL_GL_CreateContext : %s", SDL_GetError());
         return EXIT_FAILURE;
     }
@@ -527,6 +552,6 @@ int main()
     mainLoop(window);
 
     sqlite3_close(projectDB);
-    /*free_resources(window);*/
+    free_resources(window, context);
     return EXIT_SUCCESS;
 }

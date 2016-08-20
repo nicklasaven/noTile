@@ -176,6 +176,7 @@ void destroy_buffer(GLESSTRUCT *res_buf)
     free(res_buf->start_index);
     free(res_buf->npoints);
     free(res_buf->id);
+    free(res_buf->polygon_offset);
     free(res_buf->styleID);
     free(res_buf);
     return;

@@ -72,9 +72,6 @@ can hold according to the specification*/
 #define INIT_PS_POOL_SIZE 10
 
 
-sqlite3 *projectDB;
-
-int nLayers;
 
 /**
 
@@ -157,7 +154,7 @@ typedef struct
     GLint maxScale;
     GLESSTRUCT *res_buf;
     ELEMENTSTRUCT *tri_index;
-    STYLES_RUNTIME **styles;
+ //   STYLES_RUNTIME **styles;
 }
 LAYER_RUNTIME;
 
@@ -303,6 +300,12 @@ int  renderPolygon(LAYER_RUNTIME *oneLayer,GLfloat *theMatrix);
 int render_data(SDL_Window* window,GLfloat *bbox,GLfloat *theMatrix);
 
 /*********************** Global variables*******************************/
+
+
+sqlite3 *projectDB;
+
+int nLayers;
+
 
 LAYER_RUNTIME *layerRuntime;
 
