@@ -32,9 +32,8 @@ int init_resources()
     DEBUG_PRINT(("Entering init_resources\n"));
     int i, rc;
     char     *err_msg;
-//char  *dbname,styleID, connDbIndex,*dbsource,*vs_name, *fs_name, *vs_source*fs_source, layerID;
     GLint attribute_coord2d, uniform_theMatrix, uniform_color;
-    // char *geometryfield, *idfield, *layername, *geometryindex, *geometrytype;
+    
     LAYER_RUNTIME *oneLayer;
     char sql[2048];
     char *styleselect;
@@ -49,9 +48,11 @@ int init_resources()
     sqlite3_stmt *preparedLayer;
     sqlite3_stmt *preparedCountStyle;
     sqlite3_stmt * preparedStylesLoading;
-    /*We create prepared statements for some queries so we can just change parameters as we iterate the layers*/
 
-    /*First we get some information about the layers in the project*/
+        
+     /********************************************************************************
+      Get information about all the layers in the project
+      */
     char *sqlLayerLoading = "SELECT "
                             /*fields for attaching the database*/
                             "d.name dbname, d.source filename, "
@@ -71,16 +72,17 @@ int init_resources()
                             "INNER JOIN shaders fs on p.fs = fs.name order by l.orderby ;";
     DEBUG_PRINT(("Get Layer sql : %s\n",sqlLayerLoading));
     rc = sqlite3_prepare_v2(projectDB, sqlLayerLoading, -1, &preparedLayerLoading, 0);
-    //rc = sqlite3_exec(db, sql, callback, 0, &err_msg);
 
     if (rc != SQLITE_OK ) {
         fprintf(stderr, "SQL error in %s\n",sqlLayerLoading );
         sqlite3_close(projectDB);
         return 1;
     }
-
-
-    /*This is for inserting runtime parameters in our layers_runtime table*/
+    
+    
+     /********************************************************************************
+      Count the layers in the project and get maximum styleID in the project
+      */
     char *sqlCountStyles = "SELECT COUNT(*), MAX(styleID)   "
                            "FROM styles s ; ";
 
@@ -95,29 +97,30 @@ int init_resources()
     int nStyles = sqlite3_column_int(preparedCountStyle, 0);
     int maxStyleID = sqlite3_column_int(preparedCountStyle, 1);
     sqlite3_finalize(preparedCountStyle);
-
+    
+    
+    /********************************************************************************
+      Put all the styles in an array of style structures
+    */
     length_global_styles = maxStyleID + 1;
 
     size_t thesize = length_global_styles * sizeof(STYLES_RUNTIME) + 1;
     global_styles = malloc(thesize); // + 1 is for making place for 1-based array
     memset(global_styles,0,thesize);
 
-    /*First we get some information about the layers in the project*/
     char *sqlStyles = "SELECT "
                       /*fields for attaching the database*/
                       "styleID, color_r, color_g, color_b, color_a, out_r, out_g, out_b, line_w "
                       "from styles;";
 
-
-
     rc = sqlite3_prepare_v2(projectDB, sqlStyles, -1, &preparedStylesLoading, 0);
-    //rc = sqlite3_exec(db, sql, callback, 0, &err_msg);
 
     if (rc != SQLITE_OK ) {
         fprintf(stderr, "SQL error in %s\n",sqlStyles );
         sqlite3_close(projectDB);
         return 1;
     }
+    
     for (i =0; i<nStyles; i++)
     {
         sqlite3_step(preparedStylesLoading);
@@ -134,7 +137,12 @@ int init_resources()
     }
 
     sqlite3_finalize(preparedStylesLoading);
-    /*We fetch all databases that is used by Layers to attach them to our projectDB*/
+    
+    
+    /********************************************************************************
+      Attach all databases with data for the project
+    */
+
     char *sqlDb2Attach = " select distinct d.source, d.name from dbs d inner join layers l on d.name=l.source;";
 
     rc = sqlite3_prepare_v2(projectDB, sqlDb2Attach, -1, &preparedDb2Attach, 0);
@@ -164,10 +172,14 @@ int init_resources()
          fs_source = sqlite3_column_text(preparedLayerLoading, 4);*/
     }
     sqlite3_finalize(preparedDb2Attach);
-    /*This is for inserting runtime parameters in our layers_runtime table*/
+    
+    /********************************************************************************
+     Count how many layers we are dealing with
+    */
     char *sqlCountLayers = "SELECT COUNT(*)   "
                            "FROM layers l ; ";
 
+    
     rc = sqlite3_prepare_v2(projectDB, sqlCountLayers, -1, &preparedCountLayers, 0);
 
     if (rc != SQLITE_OK ) {
@@ -179,22 +191,22 @@ int init_resources()
     nLayers = sqlite3_column_int(preparedCountLayers, 0);
 
     sqlite3_finalize(preparedCountLayers);
-    /*Here is a query for attaching the data set databases, so we can read data from inside our runtime database*/
+    
 
+    /********************************************************************************
+     Time to iterate all layers in the project and add data about them in struct layerRuntime
+    */
 
     layerRuntime = init_layer_runtime(nLayers);
+    
 
-    /*Ok, now let's iterate all the layers in the project*/
-    //  while (sqlite3_step(preparedLayerLoading))
     for (i =0; i<nLayers; i++)
     {
         oneLayer=layerRuntime + i;
         sqlite3_step(preparedLayerLoading);
 
-
         const unsigned char * vs_source = sqlite3_column_text(preparedLayerLoading, 3);
         const unsigned char *  fs_source = sqlite3_column_text(preparedLayerLoading, 4);
-
 
         if ((vs = create_shader((const char*) vs_source, GL_VERTEX_SHADER))   == 0) return 0;
         if ((fs = create_shader((const char*) fs_source, GL_FRAGMENT_SHADER)) == 0) return 0;
@@ -251,9 +263,6 @@ int init_resources()
         const unsigned char *stylefield =  sqlite3_column_text(preparedLayerLoading, 14);
         int layerid =  (uint8_t) sqlite3_column_int(preparedLayerLoading, 15);
 
-
-        //     const unsigned char *filter = sqlite3_column_text(preparedLayerLoading, 14);
-
         oneLayer->visible = sqlite3_column_int(preparedLayerLoading, 10);
         oneLayer->minScale = sqlite3_column_int(preparedLayerLoading, 11);
         oneLayer->maxScale = sqlite3_column_int(preparedLayerLoading, 12);
@@ -306,17 +315,6 @@ int init_resources()
                  " ei.minX<? and ei.maxX>? and ei.minY<? and ei.maxY >? ",
                  stylewhere );
 
-        /*
-           if (oneLayer->geometryType == POLYGONTYPE)
-           {
-                 snprintf(sql,sizeof(sql), " %s%s%s",
-                     sql,
-        	 " , ",
-                     tri_index_field);
-           }
-        */
-
-        //psIndex = get_new_psindex();
         rc = sqlite3_prepare_v2(projectDB, sql, -1,&preparedLayer, 0);
 
         if (rc != SQLITE_OK ) {
@@ -338,7 +336,89 @@ int init_resources()
     return 0;
 }
 
+void mainLoop(SDL_Window* window) {
 
+    DEBUG_PRINT(("Entering ,mainLoop\n"));
+
+    DEBUG_PRINT(("SwapInterval is %d\n", SDL_GL_GetSwapInterval()));
+
+    GLfloat currentBBOX[4] = {0.0,0.0,0.0,0.0};
+    GLfloat newBBOX[4] = {0.0,0.0,0.0,0.0};
+    int mouse_down;
+
+    int wheel_y;
+    SDL_Event ev;
+    GLint px_x_clicked,px_y_clicked;
+
+
+    GLfloat mouse_down_x = 0, mouse_down_y = 0,mouse_up_x, mouse_up_y;
+
+
+    initialBBOX(230000, 6660000, 1000, newBBOX);
+
+
+    GLfloat theMatrix[16];
+
+    matrixFromBBOX(newBBOX, theMatrix);
+
+    get_data(window, newBBOX, theMatrix);
+
+    copyNew2CurrentBBOX(newBBOX, currentBBOX);
+
+    while (1)
+    {
+
+        if (SDL_WaitEvent(&ev)) /* execution suspends here while waiting on an event */
+        {
+
+            switch (ev.type)
+            {
+            case SDL_QUIT:
+                return;
+            case SDL_MOUSEBUTTONDOWN:
+                mouse_down = 1;
+                mouse_down_x = ev.button.x;
+                mouse_down_y = ev.button.y;
+                break;
+            case SDL_MOUSEBUTTONUP:
+                mouse_down = 0;
+                mouse_up_x = ev.button.x;
+                mouse_up_y = ev.button.y;
+                matrixFromDeltaMouse(currentBBOX,newBBOX,mouse_down_x,mouse_down_y,mouse_up_x,mouse_up_y, theMatrix);
+		//render_data(window,currentBBOX,theMatrix);
+                get_data(window, newBBOX, theMatrix);
+                copyNew2CurrentBBOX(newBBOX, currentBBOX);
+                break;
+            case SDL_MOUSEWHEEL:
+                wheel_y = ev.wheel.y;
+
+                SDL_GetMouseState(&px_x_clicked, &px_y_clicked);
+
+                if(wheel_y > 0)
+                    matrixFromBboxPointZoom(currentBBOX,newBBOX,px_x_clicked, px_y_clicked, 0.5, theMatrix);
+                else
+                    matrixFromBboxPointZoom(currentBBOX,newBBOX,px_x_clicked, px_y_clicked, 2, theMatrix);
+
+                get_data(window, newBBOX, theMatrix);
+		
+                copyNew2CurrentBBOX(newBBOX, currentBBOX);
+                break;
+            case SDL_WINDOWEVENT:
+                if (ev.window.event  == SDL_WINDOWEVENT_RESIZED && !mouse_down)
+                {
+                    windowResize(ev.window.data1,ev.window.data2,currentBBOX, newBBOX);
+                    copyNew2CurrentBBOX(newBBOX, currentBBOX);
+
+                    glViewport(0,0,CURR_WIDTH, CURR_HEIGHT);
+
+                }
+                break;
+            }
+        }
+        //      render_data(window,currentBBOX,theMatrix);
+    }
+    return ;
+}
 
 void free_resources(SDL_Window* window,SDL_GLContext context) {
     int t;
@@ -368,138 +448,16 @@ void free_resources(SDL_Window* window,SDL_GLContext context) {
     SDL_Quit();
 }
 
-
-void mainLoop(SDL_Window* window) {
-
-    DEBUG_PRINT(("Entering ,mainLoop\n"));
-
-    DEBUG_PRINT(("SwapInterval is %d\n", SDL_GL_GetSwapInterval()));
-
-    GLfloat currentBBOX[4] = {0.0,0.0,0.0,0.0};
-    GLfloat newBBOX[4] = {0.0,0.0,0.0,0.0};
-    int mouse_down;
-//~ int first = 1;
-
-//~ GLfloat matr[16];
-
-    int wheel_y;
-    SDL_Event ev;
-    //~ GLint px_x,px_y;
-    GLint px_x_clicked,px_y_clicked;//,px_x_center,px_y_center;
-    //~ GLfloat w_x_clicked,w_y_clicked,w_x_center,w_y_center;
-    //~ GLfloat w_x, w_y;
-
-    GLfloat mouse_down_x = 0, mouse_down_y = 0,mouse_up_x, mouse_up_y;
-//glGenBuffers(1, &vbo_line);
-    //~ newBBOX[0] = 230000;
-    //~ newBBOX[1] = 6660000;
-    //~ newBBOX[2] = 330000;
-    //~ newBBOX[3] = 6760000;
-
-    /*
-        newBBOX[0] = 362700;
-        newBBOX[1] = 6604700;
-        newBBOX[2] = 363000;
-        newBBOX[3] = 6605000;*/
-    /*    newBBOX[0] = 360000;
-       newBBOX[1] = 6600000;
-       newBBOX[2] = 365000;
-       newBBOX[3] = 6605000;
-
-
-    newBBOX[0] = 229500;
-    newBBOX[1] = 6659750;
-    newBBOX[2] = 230500;
-    newBBOX[3] = 6659750;
-    */
-
-    initialBBOX(230000, 6660000, 1000, newBBOX);
-
-
-    GLfloat theMatrix[16];
-
-    matrixFromBBOX(newBBOX, theMatrix);
-
-    get_data(window, newBBOX, theMatrix);
-
-    copyNew2CurrentBBOX(newBBOX, currentBBOX);
-
-    while (1)
-    {
-
-        if (SDL_WaitEvent(&ev)) /* execution suspends here while waiting on an event */
-//      while (SDL_PollEvent(&ev))
-        {
-
-            switch (ev.type)
-            {
-            case SDL_QUIT:
-                return;
-            case SDL_MOUSEBUTTONDOWN:
-                mouse_down = 1;
-                mouse_down_x = ev.button.x;
-                mouse_down_y = ev.button.y;
-                break;
-            case SDL_MOUSEBUTTONUP:
-                mouse_down = 0;
-                mouse_up_x = ev.button.x;
-                mouse_up_y = ev.button.y;
-                //   SDL_GetMouseState(&mouse_up_x, &mouse_up_y);
-                matrixFromDeltaMouse(currentBBOX,newBBOX,mouse_down_x,mouse_down_y,mouse_up_x,mouse_up_y, theMatrix);
-                get_data(window, newBBOX, theMatrix);
-                //	render_data(window, newBBOX, theMatrix);
-                //render(window, theMatrix);
-                copyNew2CurrentBBOX(newBBOX, currentBBOX);
-                // get_data(window, bbox, res_buf);
-                break;
-            case SDL_MOUSEWHEEL:
-                wheel_y = ev.wheel.y;
-
-                SDL_GetMouseState(&px_x_clicked, &px_y_clicked);
-
-                if(wheel_y > 0)
-                    matrixFromBboxPointZoom(currentBBOX,newBBOX,px_x_clicked, px_y_clicked, 0.5, theMatrix);
-                else
-                    matrixFromBboxPointZoom(currentBBOX,newBBOX,px_x_clicked, px_y_clicked, 2, theMatrix);
-
-                get_data(window, newBBOX, theMatrix);
-//	render_data(window, newBBOX, theMatrix);
-                copyNew2CurrentBBOX(newBBOX, currentBBOX);
-                break;
-            case SDL_WINDOWEVENT:
-                if (ev.window.event  == SDL_WINDOWEVENT_RESIZED && !mouse_down)
-                {
-                    windowResize(ev.window.data1,ev.window.data2,currentBBOX, newBBOX);
-                    copyNew2CurrentBBOX(newBBOX, currentBBOX);
-
-                    // get_data(window, newBBOX, theMatrix);
-                    glViewport(0,0,CURR_WIDTH, CURR_HEIGHT);
-
-                }
-                break;
-            }
-        }
-
-        //      render_data(window,currentBBOX,theMatrix);
-    }
-    return ;
-}
-
-
 int main()
 {
-    //   const char *projectfile = "test.sqlite";
     const char *projectfile = "norge_proj.sqlite";
 
 
     SDL_Init(SDL_INIT_VIDEO);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-//SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-//SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
-//    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 4);
-//    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-//   SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,0);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+   SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES,0);
 
     SDL_Window* window = SDL_CreateWindow("noTile",
                                           SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -529,6 +487,7 @@ int main()
 
     /*load the db into memory*/
     //loadOrSaveDb(projectDB, projectfile,0);
+    
     SDL_GLContext context = SDL_GL_CreateContext(window);
     if (context == NULL) {
         fprintf(stderr, "Error: SDL_GL_CreateContext : %s", SDL_GetError());

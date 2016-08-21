@@ -32,27 +32,7 @@ static int decode_multi(TWKB_PARSE_STATE *ts, GLESSTRUCT *res_buf);
 static int read_pointarray(TWKB_PARSE_STATE *ts, uint32_t npoints, GLESSTRUCT *res_buf);
 int* decode_id_list(TWKB_PARSE_STATE *ts, int ngeoms);
 
-//~ int
-//~ decode_twkb_start(uint8_t *buf, size_t buf_len)
-//~ {
-//~ TWKB_HEADER_INFO thi;
-//~ TWKB_PARSE_STATE ts;
-//~ TWKB_BUF tb;
 
-//~ BBOX bbox;
-//~ ts.thi = &thi;
-//~ ts.thi->bbox=&bbox;
-
-
-
-//~ tb.handled_buffer = 0;
-//~ tb.start_pos = tb.read_pos=buf;
-//~ tb.end_pos=buf+buf_len;
-//~ ts.tb=&tb;
-//~ ts.rb = res_buf;
-//~ return decode_twkb(&ts,res_buf);
-//~ return NULL;
-//~ }
 
 int
 decode_twkb(TWKB_PARSE_STATE *old_ts , GLESSTRUCT *res_buf)
@@ -285,11 +265,7 @@ read_pointarray(TWKB_PARSE_STATE *ts, uint32_t npoints, GLESSTRUCT *res_buf)
     float *dlist;
     float new_val;
     double f;
-    /* Empty! */
-    //~ if( npoints == 0 )
-    //~ return pa;
 
-    //~ has_z=ts->thi->has_z;
     int has_m=ts->thi->has_m;
 
     int c = 0, filter = 10000;

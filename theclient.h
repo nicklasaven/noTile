@@ -154,7 +154,6 @@ typedef struct
     GLint maxScale;
     GLESSTRUCT *res_buf;
     ELEMENTSTRUCT *tri_index;
- //   STYLES_RUNTIME **styles;
 }
 LAYER_RUNTIME;
 

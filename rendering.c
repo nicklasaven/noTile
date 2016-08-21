@@ -49,7 +49,6 @@ int renderPoint(LAYER_RUNTIME *oneLayer,GLfloat *theMatrix)
     glUseProgram(oneLayer->program);
     glEnableVertexAttribArray(oneLayer->attribute_coord2d);
     /* Describe our vertices array to OpenGL (it can't guess its format automatically) */
-//   glBindBuffer(GL_ARRAY_BUFFER, vbo_line);
     glVertexAttribPointer(
         oneLayer->attribute_coord2d, // attribute
         2,                 // number of elements per vertex, here (x,y)
@@ -69,23 +68,13 @@ int renderPoint(LAYER_RUNTIME *oneLayer,GLfloat *theMatrix)
         fprintf(stderr,"opengl error:%d\n", err);
     }
 
-
-// glUniform4fv(oneLayer->uniform_color,1,c );
-//glUniform4fv(oneLayer->uniform_color,1,oneLayer->color );
-//    glUniform4i(oneLayer->uniform_color,  0,1,0,0 );
-    //  glUniformMatrix4fv(uniform_rw2oglw_translate, 1, GL_FALSE, transl);
-
     while ((err = glGetError()) != GL_NO_ERROR) {
         DEBUG_PRINT(("Problem3: %d\n", err));
         fprintf(stderr,"opengl error:%d\n", err);
     }
-    //   glMultiDrawArrays(GL_LINE_STRIP, res_buf->start_index, res_buf->npoints,res_buf->used_n_pa);
 
     for (i=0; i<rb->used_n_pa; i++)
     {
-        /*    np = *(rb->npoints+i);
-            pi = *(rb->start_index+i);*/
-        //      color = oneLayer->styles[*(rb->styleID+i)]->color;
         Uint32 styleID = *(rb->styleID+i);
         if(styleID<length_global_styles && global_styles[styleID].styleID == styleID)
         {
@@ -128,7 +117,6 @@ int renderLine(LAYER_RUNTIME *oneLayer,GLfloat *theMatrix, int outline)
     glUseProgram(oneLayer->program);
     glEnableVertexAttribArray(oneLayer->attribute_coord2d);
     /* Describe our vertices array to OpenGL (it can't guess its format automatically) */
-//   glBindBuffer(GL_ARRAY_BUFFER, vbo_line);
     glVertexAttribPointer(
         oneLayer->attribute_coord2d, // attribute
         2,                 // number of elements per vertex, here (x,y)
@@ -148,19 +136,11 @@ int renderLine(LAYER_RUNTIME *oneLayer,GLfloat *theMatrix, int outline)
         fprintf(stderr,"opengl error:%d", err);
     }
 
-
-
-// glUniform4fv(oneLayer->uniform_color,1,c );
-//glUniform4fv(oneLayer->uniform_color,1,oneLayer->color );
-//    glUniform4i(oneLayer->uniform_color,  0,1,0,0 );
-    //  glUniformMatrix4fv(uniform_rw2oglw_translate, 1, GL_FALSE, transl);
-
     while ((err = glGetError()) != GL_NO_ERROR) {
         DEBUG_PRINT(("Problem3: %d\n", err));
         fprintf(stderr,"opengl error:%d", err);
     }
-    //   glMultiDrawArrays(GL_LINE_STRIP, res_buf->start_index, res_buf->npoints,res_buf->used_n_pa);
-//glLineWidth(1.5);
+    
     for (i=0; i<rb->used_n_pa; i++)
     {
         lw = 0;
@@ -234,9 +214,6 @@ int renderPolygon(LAYER_RUNTIME *oneLayer,GLfloat *theMatrix)
 
     glUseProgram(oneLayer->program);
     glEnableVertexAttribArray(oneLayer->attribute_coord2d);
-    /* Describe our vertices array to OpenGL (it can't guess its format automatically) */
-//   glBindBuffer(GL_ARRAY_BUFFER, vbo_line);
-
 
 
     for (i=0; i<ti->used_n_pa; i++)
@@ -257,7 +234,7 @@ int renderPolygon(LAYER_RUNTIME *oneLayer,GLfloat *theMatrix)
 
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, oneLayer->ebo);
-//    glUniform1fv(uniform_bbox, 4, bbox);
+	
         glUniformMatrix4fv(oneLayer->uniform_theMatrix, 1, GL_FALSE,theMatrix );
         while ((err = glGetError()) != GL_NO_ERROR) {
             DEBUG_PRINT(("Problem 2\n"));
@@ -274,7 +251,6 @@ int renderPolygon(LAYER_RUNTIME *oneLayer,GLfloat *theMatrix)
             return 1;
         }
 
-//GLfloat color[4] = {0.5, 0.5, 0.5,0.5};
         glUniform4fv(oneLayer->uniform_color,1,color );
 
 
@@ -313,3 +289,52 @@ int renderPolygon(LAYER_RUNTIME *oneLayer,GLfloat *theMatrix)
     return 0;
 
 }
+
+
+
+/*This is actually not used now, but van be called to render without fetching data from db*/
+int render_data(SDL_Window* window,GLfloat *bbox,GLfloat *theMatrix)
+{
+
+
+    DEBUG_PRINT(("Entering render_data\n"));
+    int i;
+    LAYER_RUNTIME *oneLayer;
+    GLfloat meterPerPixel = (bbox[2]-bbox[0])/CURR_WIDTH;
+
+    glClearColor(1.0, 1.0, 1.0, 1.0);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    for (i=0; i<nLayers; i++)
+    {
+        oneLayer = layerRuntime + i;
+
+
+        if(oneLayer->visible && oneLayer->minScale<=meterPerPixel && oneLayer->maxScale>meterPerPixel)
+        {
+
+
+            switch(oneLayer->geometryType)
+            {
+            case POINTTYPE :
+                renderPoint( oneLayer, theMatrix);
+                break;
+            case LINETYPE :
+                renderLine( oneLayer, theMatrix, 0);
+                break;
+	    case POLYGONTYPE :
+		renderPolygon( oneLayer, theMatrix);
+		renderLine(oneLayer, theMatrix,1);
+		break;
+            }
+        }
+    }
+
+    SDL_GL_SwapWindow(window);
+    
+    //  pthread_mutex_destroy(&mutex);
+//render(window,res_buf);
+    return 0;
+}
+
+

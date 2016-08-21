@@ -55,7 +55,7 @@ int get_data(SDL_Window* window,GLfloat *bbox,GLfloat *theMatrix)
 
         }
     }
-//	render_data(window,bbox,theMatrix);
+    
     glClearColor(1.0, 1.0, 1.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -86,50 +86,10 @@ int get_data(SDL_Window* window,GLfloat *bbox,GLfloat *theMatrix)
     }
 
     SDL_GL_SwapWindow(window);
-    //  pthread_mutex_destroy(&mutex);
 //render(window,res_buf);
     return 0;
 }
 
-
-int render_data(SDL_Window* window,GLfloat *bbox,GLfloat *theMatrix)
-{
-
-
-    DEBUG_PRINT(("Entering render_data\n"));
-    int i;
-    LAYER_RUNTIME *oneLayer;
-    GLfloat meterPerPixel = (bbox[2]-bbox[0])/CURR_WIDTH;
-
-    glClearColor(1.0, 1.0, 1.0, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    for (i=0; i<nLayers; i++)
-    {
-        oneLayer = layerRuntime + i;
-
-
-        if(oneLayer->visible && oneLayer->minScale<=meterPerPixel && oneLayer->maxScale>meterPerPixel)
-        {
-
-
-            switch(oneLayer->geometryType)
-            {
-            case POINTTYPE :
-                renderPoint( oneLayer, theMatrix);
-                break;
-            case LINETYPE :
-                renderLine( oneLayer, theMatrix, 0);
-                break;
-            }
-        }
-    }
-
-    SDL_GL_SwapWindow(window);
-    //  pthread_mutex_destroy(&mutex);
-//render(window,res_buf);
-    return 0;
-}
 
 
 

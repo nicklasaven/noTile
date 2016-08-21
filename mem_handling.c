@@ -33,18 +33,18 @@ GLESSTRUCT* init_res_buf()
     size_t vertex_size = sizeof(float)*START_MAX_N_VERTEX; //in bytes
 
     res_buf = malloc(sizeof(GLESSTRUCT));
-    res_buf->vertex_array=malloc(vertex_size); //Vi börjar med att göra plats för 1000 vertex-punkter så dubblar vi när behovet ökar
-    res_buf->start_index = malloc(sizeof(uint32_t)*100); //Vi börjar med att göra plats för 100 point arrays
-    res_buf->npoints= malloc(sizeof(uint32_t)*100); //Vi börjar med att göra plats för 100 point arrays
-    res_buf->id= malloc(sizeof(uint32_t)*100); //Vi börjar med att göra plats för 100 point arrays
-    res_buf->styleID= malloc(sizeof(uint32_t)*100); //Vi börjar med att göra plats för 100 point arrays
+    res_buf->vertex_array=malloc(vertex_size); 
+    res_buf->start_index = malloc(sizeof(uint32_t)*100); 
+    res_buf->npoints= malloc(sizeof(uint32_t)*100); 
+    res_buf->id= malloc(sizeof(uint32_t)*100); 
+    res_buf->styleID= malloc(sizeof(uint32_t)*100); 
     res_buf->total_npoints = 0;
     res_buf->used_n_pa = 0;
 
     res_buf->max_pa=100 ;
 
-    res_buf->polygon_offset = malloc(sizeof(size_t)*100); //Vi börjar med att göra plats för 100 point arrays
-//    res_buf->npoints_polygon= malloc(sizeof(int)*100); //Vi börjar med att göra plats för 100 point arrays
+    res_buf->polygon_offset = malloc(sizeof(size_t)*100); 
+//    res_buf->npoints_polygon= malloc(sizeof(int)*100); 
     res_buf->used_n_polygon = 0;
     res_buf->max_polygon=100 ;
 
@@ -189,11 +189,11 @@ ELEMENTSTRUCT* init_element_buf()
     size_t vertex_size = sizeof(GLushort)*START_MAX_N_VERTEX; //in bytes
 
     element_buf = malloc(sizeof(ELEMENTSTRUCT));
-    element_buf->index_array=malloc(vertex_size); //Vi börjar med att göra plats för 1000 vertex-punkter så dubblar vi när behovet ökar
-    element_buf->start_index = malloc(sizeof(int)*100); //Vi börjar med att göra plats för 100 point arrays
-    element_buf->npoints= malloc(sizeof(int)*100); //Vi börjar med att göra plats för 100 point arrays
-    element_buf->id= malloc(sizeof(int)*100); //Vi börjar med att göra plats för 100 point arrays
-    element_buf->styleID= malloc(sizeof(int)*100); //Vi börjar med att göra plats för 100 point arrays
+    element_buf->index_array=malloc(vertex_size); 
+    element_buf->start_index = malloc(sizeof(int)*100); 
+    element_buf->npoints= malloc(sizeof(int)*100); 
+    element_buf->id= malloc(sizeof(int)*100); 
+    element_buf->styleID= malloc(sizeof(int)*100); 
     element_buf->total_npoints = 0;
     element_buf->used_n_pa = 0;
 
