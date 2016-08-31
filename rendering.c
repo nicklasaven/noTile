@@ -41,7 +41,7 @@ int renderPoint(LAYER_RUNTIME *oneLayer,GLfloat *theMatrix)
 {
     uint32_t i;//, np, pi;
     GLfloat *color;
-    GLenum err;
+  //  GLenum err;
     glBindBuffer(GL_ARRAY_BUFFER, oneLayer->vbo);
     GLESSTRUCT *rb = oneLayer->res_buf;
     // glEnable(GL_PROGRAM_POINT_SIZE);
@@ -57,21 +57,18 @@ int renderPoint(LAYER_RUNTIME *oneLayer,GLfloat *theMatrix)
         0,                 // no extra data between each position
         0                  // offset of first element
     );
-    while ((err = glGetError()) != GL_NO_ERROR) {
+ /*   while ((err = glGetError()) != GL_NO_ERROR) {
         DEBUG_PRINT(("Problem1\n"));
         fprintf(stderr,"opengl error:%d\n", err);
-    }
+    }*/
 //    glUniform1fv(uniform_bbox, 4, bbox);
     glUniformMatrix4fv(oneLayer->uniform_theMatrix, 1, GL_FALSE,theMatrix );
-    while ((err = glGetError()) != GL_NO_ERROR) {
-        DEBUG_PRINT(("Problem 2\n"));
-        fprintf(stderr,"opengl error:%d\n", err);
-    }
 
+/*
     while ((err = glGetError()) != GL_NO_ERROR) {
         DEBUG_PRINT(("Problem3: %d\n", err));
         fprintf(stderr,"opengl error:%d\n", err);
-    }
+    }*/
 
     for (i=0; i<rb->used_n_pa; i++)
     {
@@ -110,7 +107,7 @@ int renderLine(LAYER_RUNTIME *oneLayer,GLfloat *theMatrix, int outline)
     DEBUG_PRINT(("Entering renderLine\n"));
     uint32_t i;//, np, pi;
     GLfloat *color, lw;
-    GLenum err;
+ //   GLenum err;
     glBindBuffer(GL_ARRAY_BUFFER, oneLayer->vbo);
     GLESSTRUCT *rb = oneLayer->res_buf;
 
@@ -125,21 +122,18 @@ int renderLine(LAYER_RUNTIME *oneLayer,GLfloat *theMatrix, int outline)
         0,                 // no extra data between each position
         0                  // offset of first element
     );
-    while ((err = glGetError()) != GL_NO_ERROR) {
+ /*   while ((err = glGetError()) != GL_NO_ERROR) {
         DEBUG_PRINT(("Problem1\n"));
         fprintf(stderr,"opengl error:%d", err);
-    }
+    }*/
 //    glUniform1fv(uniform_bbox, 4, bbox);
     glUniformMatrix4fv(oneLayer->uniform_theMatrix, 1, GL_FALSE,theMatrix );
-    while ((err = glGetError()) != GL_NO_ERROR) {
+ /*   while ((err = glGetError()) != GL_NO_ERROR) {
         DEBUG_PRINT(("Problem 2\n"));
         fprintf(stderr,"opengl error:%d", err);
-    }
+    }*/
 
-    while ((err = glGetError()) != GL_NO_ERROR) {
-        DEBUG_PRINT(("Problem3: %d\n", err));
-        fprintf(stderr,"opengl error:%d", err);
-    }
+  
     
     for (i=0; i<rb->used_n_pa; i++)
     {
@@ -207,7 +201,7 @@ int renderPolygon(LAYER_RUNTIME *oneLayer,GLfloat *theMatrix)
     DEBUG_PRINT(("Entering renderPolygon\n"));
     uint32_t i;//, np, pi;
     GLfloat *color;
-    GLenum err;
+//    GLenum err;
     glBindBuffer(GL_ARRAY_BUFFER, oneLayer->vbo);
     GLESSTRUCT *rb = oneLayer->res_buf;
     ELEMENTSTRUCT *ti = oneLayer->tri_index;
@@ -227,19 +221,19 @@ int renderPolygon(LAYER_RUNTIME *oneLayer,GLfloat *theMatrix)
             0,                 // no extra data between each position
             (GLvoid*) vertex_offset                  // offset of first element
         );
-        while ((err = glGetError()) != GL_NO_ERROR) {
+    /*    while ((err = glGetError()) != GL_NO_ERROR) {
             DEBUG_PRINT(("Problem1\n"));
             fprintf(stderr,"opengl error:%d", err);
-        }
+        }*/
 
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, oneLayer->ebo);
 	
         glUniformMatrix4fv(oneLayer->uniform_theMatrix, 1, GL_FALSE,theMatrix );
-        while ((err = glGetError()) != GL_NO_ERROR) {
+      /*  while ((err = glGetError()) != GL_NO_ERROR) {
             DEBUG_PRINT(("Problem 2\n"));
             fprintf(stderr,"opengl error:%d", err);
-        }
+        }*/
 
         Uint32 styleID = *(ti->styleID+i);
         if(styleID<length_global_styles && global_styles[styleID].styleID == styleID)
@@ -254,20 +248,16 @@ int renderPolygon(LAYER_RUNTIME *oneLayer,GLfloat *theMatrix)
         glUniform4fv(oneLayer->uniform_color,1,color );
 
 
+
+
+
+
+/*
         while ((err = glGetError()) != GL_NO_ERROR) {
             DEBUG_PRINT(("Problem3: %d\n", err));
             fprintf(stderr,"opengl error:%d", err);
         }
-
-
-
-
-
-        while ((err = glGetError()) != GL_NO_ERROR) {
-            DEBUG_PRINT(("Problem3: %d\n", err));
-            fprintf(stderr,"opengl error:%d", err);
-        }
-        /*    np = *(ti->npoints+i);
+            np = *(ti->npoints+i);
             pi = *(ti->start_index+i);
             for (h=0;h<*(ti->npoints+i) * 3;h++)
             {

@@ -404,7 +404,7 @@ void mainLoop(SDL_Window* window) {
                 copyNew2CurrentBBOX(newBBOX, currentBBOX);
                 break;
             case SDL_WINDOWEVENT:
-                if (ev.window.event  == SDL_WINDOWEVENT_RESIZED && !mouse_down)
+                if (ev.window.event  == SDL_WINDOWEVENT_RESIZED)
                 {
                     windowResize(ev.window.data1,ev.window.data2,currentBBOX, newBBOX);
                     copyNew2CurrentBBOX(newBBOX, currentBBOX);
@@ -448,10 +448,14 @@ void free_resources(SDL_Window* window,SDL_GLContext context) {
     SDL_Quit();
 }
 
-int main()
+int main(int argc, char *argv[])
 {
-    const char *projectfile = "norge_proj.sqlite";
-
+  char *projectfile;
+  if(argc > 1)
+    projectfile = argv[argc-1];
+  else
+    projectfile = "norge_proj.sqlite";
+DEBUG_PRINT(("projectfile = %s\n",projectfile));
 
     SDL_Init(SDL_INIT_VIDEO);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
@@ -470,8 +474,6 @@ int main()
         fprintf(stderr, "Error: can't create window:  : %s", SDL_GetError());
         return EXIT_FAILURE;
     }
-
-
 
     /* Open db-connection*/
     sqlite3_initialize();

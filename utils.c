@@ -89,12 +89,10 @@ int px2m(GLfloat *bbox,GLint px_x,GLint px_y,GLfloat *w_x,GLfloat *w_y)
 
     DEBUG_PRINT(("Entering get_bbox\n"));
 
-
     int width = bbox[2]-bbox[0];
     int height = bbox[3]-bbox[1];
-
-    *w_x = bbox[0] + px_x * width/CURR_WIDTH;
-    *w_y = bbox[3] - px_y * height/CURR_HEIGHT;
+    *w_x = bbox[0] + px_x * (width/CURR_WIDTH);
+    *w_y = bbox[3] - px_y * (height/CURR_HEIGHT);
 
     return 0;
 }
